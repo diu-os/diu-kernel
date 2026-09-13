@@ -28,7 +28,11 @@ pub enum Syscall {
 /// REST binding of each syscall as served by api-gateway today.
 /// (method, path template) — paths are the live production routes.
 pub const REST_BINDING: [(Syscall, &str, &str); 6] = [
-    (Syscall::SubmitModule, "POST", "/api/v1/module-drafts"),
+    (
+        Syscall::SubmitModule,
+        "POST",
+        "/api/v1/projects/:id/drafts", // then :draft_id/publish — admission via Gate 1
+    ),
     (Syscall::Run, "POST", "/api/v1/projects/:id/runs"),
     (
         Syscall::Digest,

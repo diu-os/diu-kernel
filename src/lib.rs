@@ -20,6 +20,10 @@
 //   - `syscall`   — the named syscall surface of the OS (D-123 §2.1): the six
 //                   verbs userland uses to talk to the kernel, independent of
 //                   transport (REST today, MCP planned).
+//   - `gate1`     — the Gate 1 completeness validator (D-070 §2.5): admission
+//                   of a gene into userland. Pure and synchronous, so the SDK
+//                   (`diu` CLI) runs the SAME gate locally with zero drift.
+//   - `doi`       — DOI normalization + format gate (D-105), a gate1 dependency.
 //
 // What deliberately does NOT live here:
 //   - gene engines (RM/SIR/SEIR/Dst live in userland dispatch; WASM engines in
@@ -39,6 +43,8 @@
 //        defaults and horizon match its engine bit-for-bit (Q-418/Q-419/Q-420).
 
 pub mod digest;
+pub mod doi;
 pub mod epistemic;
+pub mod gate1;
 pub mod manifest;
 pub mod syscall;
