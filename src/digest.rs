@@ -41,10 +41,7 @@ mod tests {
     fn digest_is_key_order_independent() {
         let a = json!({ "b": 1.5, "a": [1, 2, 3] });
         let b = json!({ "a": [1, 2, 3], "b": 1.5 });
-        assert_eq!(
-            canonical_digest(&a).unwrap(),
-            canonical_digest(&b).unwrap()
-        );
+        assert_eq!(canonical_digest(&a).unwrap(), canonical_digest(&b).unwrap());
     }
 
     // Known-answer stability: SHA-256 over JCS bytes of a fixed value. Guards the

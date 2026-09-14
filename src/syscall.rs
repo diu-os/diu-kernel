@@ -41,11 +41,7 @@ pub const REST_BINDING: [(Syscall, &str, &str); 6] = [
     ),
     (Syscall::Claim, "POST", "/api/v1/projects/:id/claims"),
     (Syscall::Export, "POST", "/api/v1/projects/:id/exports"),
-    (
-        Syscall::Attest,
-        "POST",
-        "/api/v1/exports/:id/attestation",
-    ),
+    (Syscall::Attest, "POST", "/api/v1/exports/:id/attestation"),
 ];
 
 #[cfg(test)]
