@@ -3,7 +3,7 @@ name = "diu-kernel"
 version = "0.1.0"
 edition = "2021"
 description = "DIU OS kernel — the verification invariants of the scientific operating system: canonical digest (RFC 8785 JCS + SHA-256), module manifest contract (D-113), epistemic vocabulary (D-042/D-107), syscall surface (D-123)."
-license = "UNLICENSED" # open-sourcing is ADR D-124 (PROPOSED) — a founder decision, not implied by this crate boundary
+license = "Apache-2.0" # ADR D-124 ACCEPTED 14 Sep 2026 — founder confirmation; public mirror is github.com/diu-os/diu-kernel (subtree, post-tag)
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
