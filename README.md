@@ -40,4 +40,18 @@ Engines, HTTP, databases, AI and production endpoints **do not** belong here.
 
 A change to the digest algorithm is a major semver bump and requires a new ADR. Never silently.
 
-Public mirror (subtree, tags): `github.com/diu-os/diu-kernel` — created by the founder after the first tagged release; until then this tree lives in the platform monorepo under `kernel/`.
+## Public tree
+
+This crate is mirrored at [`github.com/diu-os/diu-kernel`](https://github.com/diu-os/diu-kernel)
+(Apache-2.0 subtree of `kernel/` only). First public tag: **`v0.1.0`**.
+
+It is **not** `diu-os.com` (commercial distro) and **not**
+`github.com/diu-platform/diu-workspace` (private platform). Genes, the `diu`
+CLI, the API gateway, the frontend and chain code are outside this tree.
+
+```bash
+git clone https://github.com/diu-os/diu-kernel.git
+cd diu-kernel
+git checkout v0.1.0
+cargo test
+```
