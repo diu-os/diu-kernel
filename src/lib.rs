@@ -13,6 +13,11 @@
 //                   math engine binding (D-107), typed ports, epistemic ceiling,
 //                   provenance. A gene without a manifest is a widget, not a
 //                   scientific module.
+//   - `criterion` — the acceptance criterion an experiment declares BEFORE it
+//                   is executed (D-131), plus the evaluator that turns one
+//                   result into a single SVVRE literal. Kernel-resident so the
+//                   CLI, the record path and any federated node reach the same
+//                   verdict from the same bytes.
 //   - `epistemic` — the four-value epistemic vocabulary (D-042/D-107):
 //                   fact | hypothesis | speculation | unknown. The ceiling never
 //                   flows upward (no digest, attest, AI answer or review may
@@ -41,7 +46,14 @@
 //        correctly", never "adequate to the world".
 //   K-5  Every executable module carries a manifest whose declared ports,
 //        defaults and horizon match its engine bit-for-bit (Q-418/Q-419/Q-420).
+//   K-6  No execution is recorded without a previously declared experiment
+//        (D-131): intent precedes execution, and is never reconstructed from
+//        it afterwards (INV-003, INV-019).
+//   K-7  An experiment's acceptance criterion is immutable once its first
+//        execution exists (D-131). Moving the bar after seeing the result is
+//        the failure mode the criterion exists to prevent.
 
+pub mod criterion;
 pub mod digest;
 pub mod doi;
 pub mod epistemic;
