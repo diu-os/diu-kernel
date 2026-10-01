@@ -53,6 +53,10 @@
 //        execution exists (D-131). Moving the bar after seeing the result is
 //        the failure mode the criterion exists to prevent.
 
+/// Crate version of `diu-kernel`. The federation instance card reports this,
+/// not the gateway binary's `/health` version (D-130 slice 3).
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub mod criterion;
 pub mod digest;
 pub mod doi;

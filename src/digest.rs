@@ -23,6 +23,9 @@ impl std::fmt::Display for DigestError {
 
 impl std::error::Error for DigestError {}
 
+/// Wire name of [`canonical_digest`] (D-130 slice 3): RFC 8785 JCS, then SHA-256, hex.
+pub const DIGEST_ALGORITHM: &str = "rfc8785-jcs-sha256";
+
 /// RFC 8785 (JCS) canonicalization of the result, then SHA-256 → hex.
 pub fn canonical_digest(result: &serde_json::Value) -> Result<String, DigestError> {
     let canonical = serde_jcs::to_vec(result).map_err(|_| DigestError)?;
