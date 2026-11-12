@@ -1,9 +1,18 @@
 [package]
 name = "diu-kernel"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-description = "DIU OS kernel — the verification invariants of the scientific operating system: canonical digest (RFC 8785 JCS + SHA-256), module manifest contract (D-113), epistemic vocabulary (D-042/D-107), syscall surface (D-123)."
+description = "Verification invariants for computational scientific claims: canonical result digest (RFC 8785 JCS + SHA-256), module manifest contract, pre-declared acceptance criteria with five-valued outcomes, and three disjoint status vocabularies."
 license = "Apache-2.0" # ADR D-124 ACCEPTED 14 Sep 2026 — founder confirmation; public mirror is github.com/diu-os/diu-kernel (subtree, post-tag)
+repository = "https://github.com/diu-os/diu-kernel"
+homepage = "https://diu-os.com"
+documentation = "https://docs.rs/diu-kernel"
+readme = "README.md"
+keywords = ["reproducibility", "verification", "science", "digest", "jcs"]
+categories = ["science", "cryptography", "encoding"]
+# The crate is the contract only. Mirror-only CI lives under .github/ and is
+# not part of the published package.
+exclude = [".github/"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

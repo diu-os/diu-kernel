@@ -1,0 +1,27 @@
+# CI for the public mirror github.com/diu-os/diu-kernel (D-136 week 2–3).
+# Inert inside the private monorepo: GitHub only reads .github/ at a repo root.
+# In the mirror (a subtree of kernel/) this file sits at the root and runs.
+name: kernel
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+      # The published crate must build from its own archive, as crates.io will.
+      - run: cargo package

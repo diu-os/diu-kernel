@@ -125,3 +125,147 @@ pub struct ModuleManifest {
     pub verification: Option<&'static [&'static str]>,
     pub tools: Option<&'static [&'static str]>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{json, Value};
+
+    const INPUTS: &[InputPort] = &[InputPort {
+        key: "r",
+        symbol: "r",
+        unit: "1/time",
+        default: 1.0,
+        min: Some(0.0),
+        max: None,
+        step: None,
+        hint: None,
+    }];
+    const OUTPUTS: &[OutputPort] = &[OutputPort {
+        key: "n",
+        short: "N",
+        label: "N (prey)",
+    }];
+
+    const SAMPLE: ModuleManifest = ModuleManifest {
+        module_id: "sample",
+        module_version: "1.0.0",
+        execution_class: "native",
+        discipline: DisciplineBinding {
+            primary: "ecology",
+            secondary: &[],
+        },
+        math_engine: MathEngineRef {
+            engine_id: "E1",
+            integrator: "rk4",
+            dt: 0.01,
+            steps: 100,
+        },
+        epistemic: EpistemicSpec {
+            max_confidence: "hypothesis",
+            default_type: "hypothesis",
+        },
+        ports: Ports {
+            inputs: INPUTS,
+            outputs: OUTPUTS,
+        },
+        equations: &["\\dot N = rN"],
+        phase_portraits: &[],
+        provenance: Provenance {
+            doi: "",
+            citation: "test",
+        },
+        standards: None,
+        verification: None,
+        tools: None,
+    };
+
+    fn keys(v: &Value) -> Vec<&str> {
+        let mut k: Vec<&str> = v.as_object().unwrap().keys().map(String::as_str).collect();
+        k.sort_unstable();
+        k
+    }
+
+    /// The field names ARE the contract (D-113). A rename is a breaking change
+    /// for every golden manifest and every frontend consumer, so it must fail here.
+    #[test]
+    fn top_level_keys_are_the_d113_contract() {
+        let v = serde_json::to_value(SAMPLE).unwrap();
+        assert_eq!(
+            keys(&v),
+            vec![
+                "discipline",
+                "epistemic",
+                "equations",
+                "execution_class",
+                "math_engine",
+                "module_id",
+                "module_version",
+                "phase_portraits",
+                "ports",
+                "provenance",
+                "standards",
+                "tools",
+                "verification",
+            ]
+        );
+    }
+
+    /// Option slots always serialize (null in v1), so the shape never shifts
+    /// when a contract lands later.
+    #[test]
+    fn empty_option_slots_serialize_as_null_not_absent() {
+        let v = serde_json::to_value(SAMPLE).unwrap();
+        assert_eq!(v["standards"], Value::Null);
+        assert_eq!(v["verification"], Value::Null);
+        assert_eq!(v["tools"], Value::Null);
+        let port = &v["ports"]["inputs"][0];
+        assert_eq!(port["max"], Value::Null);
+        assert_eq!(port["step"], Value::Null);
+        assert_eq!(port["hint"], Value::Null);
+    }
+
+    #[test]
+    fn nested_shapes_are_stable() {
+        let v = serde_json::to_value(SAMPLE).unwrap();
+        assert_eq!(
+            keys(&v["ports"]["inputs"][0]),
+            vec!["default", "hint", "key", "max", "min", "step", "symbol", "unit"]
+        );
+        assert_eq!(
+            keys(&v["ports"]["outputs"][0]),
+            vec!["key", "label", "short"]
+        );
+        assert_eq!(
+            keys(&v["math_engine"]),
+            vec!["dt", "engine_id", "integrator", "steps"]
+        );
+        assert_eq!(
+            v["epistemic"],
+            json!({"max_confidence": "hypothesis", "default_type": "hypothesis"})
+        );
+        assert_eq!(v["provenance"], json!({"doi": "", "citation": "test"}));
+    }
+
+    /// The manifest feeds the digest path through serde; float defaults must
+    /// survive serialization exactly, or K-5 (manifest ⇄ engine bit-for-bit)
+    /// would be checked against a rounded number.
+    #[test]
+    fn numeric_defaults_round_trip_exactly() {
+        let v = serde_json::to_value(SAMPLE).unwrap();
+        assert_eq!(v["ports"]["inputs"][0]["default"].as_f64(), Some(1.0));
+        assert_eq!(v["math_engine"]["dt"].as_f64(), Some(0.01));
+        assert_eq!(v["math_engine"]["steps"].as_u64(), Some(100));
+    }
+
+    /// The epistemic slots carry the kernel's own vocabulary.
+    #[test]
+    fn sample_uses_canonical_epistemic_literals() {
+        assert!(crate::epistemic::is_canonical(
+            SAMPLE.epistemic.max_confidence
+        ));
+        assert!(crate::epistemic::is_canonical(
+            SAMPLE.epistemic.default_type
+        ));
+    }
+}

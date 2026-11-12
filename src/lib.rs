@@ -29,6 +29,9 @@
 //                   of a gene into userland. Pure and synchronous, so the SDK
 //                   (`diu` CLI) runs the SAME gate locally with zero drift.
 //   - `doi`       — DOI normalization + format gate (D-105), a gate1 dependency.
+//   - `vocabulary`— the three status axes (D-137): declared ceiling (4, D-042),
+//                   execution outcome (5, SVVRE), claim state (10, ARCH-0001
+//                   §11). Disjoint literals, and no conversion between axes.
 //
 // What deliberately does NOT live here:
 //   - gene engines (RM/SIR/SEIR/Dst live in userland dispatch; WASM engines in
@@ -64,3 +67,10 @@ pub mod epistemic;
 pub mod gate1;
 pub mod manifest;
 pub mod syscall;
+pub mod vocabulary;
+
+/// The README's Rust example is compiled and run by `cargo test`, so the
+/// public front page cannot drift from the API.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+pub struct ReadmeDoctests;
