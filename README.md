@@ -24,7 +24,7 @@ to the stated bar, never a verdict on nature.
 |---|---|
 | `digest` | `canonical_digest()` — RFC 8785 JCS → SHA-256 → hex. The client never supplies a digest. |
 | `manifest` | Module manifest (D-113): identity, engine binding, typed ports, epistemic ceiling, provenance. Field names are the contract. |
-| `criterion` | The acceptance criterion an experiment declares before it runs (D-131) and `evaluate()`, which yields one SVVRE outcome: `PASS` `PARTIAL` `FAIL` `INCONCLUSIVE` `NOT_APPLICABLE`. A missing bar is never a passed bar. |
+| `criterion` | The acceptance criterion an experiment declares before it runs (D-131) and `evaluate()`, which yields one SVVRE outcome: `PASS` `PARTIAL` `FAIL` `INCONCLUSIVE` `NOT_APPLICABLE`. A missing bar is never a passed bar. `evaluate_fit()` (0.3.0) judges a fit's diagnostics: no measurement (`fit.converged`, finite `fit.r_squared`, `fit.within_bounds`) → `INCONCLUSIVE` before the bar is read (D-108 A3). |
 | `vocabulary` | The three status axes (D-137), with disjoint literals and no conversion between them. |
 | `epistemic` | Declared ceiling: `fact` / `hypothesis` / `speculation` / `unknown`. Ceilings never rise through the chain. |
 | `gate1` | Gate 1 completeness validator for a gene passport (`gene.json`). |

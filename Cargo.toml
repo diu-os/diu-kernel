@@ -1,6 +1,6 @@
 [package]
 name = "diu-kernel"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Verification invariants for computational scientific claims: canonical result digest (RFC 8785 JCS + SHA-256), module manifest contract, pre-declared acceptance criteria with five-valued outcomes, and three disjoint status vocabularies."
 license = "Apache-2.0" # ADR D-124 ACCEPTED 14 Sep 2026 — founder confirmation; public mirror is github.com/diu-os/diu-kernel (subtree, post-tag)

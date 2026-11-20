@@ -307,6 +307,63 @@ pub fn evaluate(set: &CriterionSet, result: &serde_json::Value) -> Outcome {
     Outcome::Pass
 }
 
+/// Why a fit produced no measurement (D-108 amendments A3/A3b). Checked in this
+/// order; the first that applies is the reason.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NoMeasurement {
+    /// `fit.converged` is not `1`: the solver did not converge.
+    #[serde(rename = "not_converged")]
+    NotConverged,
+    /// `fit.r_squared` is absent, non-numeric or non-finite.
+    #[serde(rename = "r_squared_not_finite")]
+    RSquaredNotFinite,
+    /// `fit.within_bounds` is not `1`: the parameters left the model domain.
+    #[serde(rename = "out_of_domain")]
+    OutOfDomain,
+}
+
+/// Whether a fit's diagnostics are a measurement at all (D-108 A3/A3b).
+///
+/// Reads exactly three keys of `measurements`: `fit.converged` and
+/// `fit.within_bounds` (numbers, `1` = yes, `0` = no) and `fit.r_squared` (a
+/// finite number; a non-finite R² travels as JSON `null`). A converged,
+/// in-domain fit with a finite R² is a measurement even when R² ≤ 0 — the model
+/// is then measured to be worse than the mean (A3b). `None` = measured.
+///
+/// Which conditions mean "in domain" is the gene's business; the kernel reads
+/// only the flag the producer wrote.
+pub fn fit_no_measurement(measurements: &serde_json::Value) -> Option<NoMeasurement> {
+    let fit = lookup(measurements, "fit");
+    let num = |key: &str| {
+        fit.and_then(|f| f.get(key))
+            .and_then(serde_json::Value::as_f64)
+    };
+    if num("converged") != Some(1.0) {
+        return Some(NoMeasurement::NotConverged);
+    }
+    if !num("r_squared").is_some_and(f64::is_finite) {
+        return Some(NoMeasurement::RSquaredNotFinite);
+    }
+    if num("within_bounds") != Some(1.0) {
+        return Some(NoMeasurement::OutOfDomain);
+    }
+    None
+}
+
+/// Evaluate a declaration against a **fit's** diagnostics (D-108 A3 → K-4).
+///
+/// A fit without a measurement is `INCONCLUSIVE` by rule — "we could not
+/// measure" is not "measured, bar not cleared" — and the criterion is not
+/// consulted. A measured fit is judged by [`evaluate`] like any execution.
+/// For a run that is not a fit, call [`evaluate`] directly: its result carries
+/// no diagnostics to read.
+pub fn evaluate_fit(set: &CriterionSet, measurements: &serde_json::Value) -> Outcome {
+    if fit_no_measurement(measurements).is_some() {
+        return Outcome::Inconclusive;
+    }
+    evaluate(set, measurements)
+}
+
 /// Walk a dot-separated path through nested objects.
 fn lookup<'a>(root: &'a serde_json::Value, path: &str) -> Option<&'a serde_json::Value> {
     let mut node = root;
@@ -552,5 +609,65 @@ mod tests {
         // cannot change the declaration's digest by carrying a null.
         let plain = serde_json::to_value(set(vec![ge("x", 1.0)])).unwrap();
         assert!(plain["all"][0].get("tolerance").is_none());
+    }
+
+    fn diag(r2: serde_json::Value, converged: f64, within: f64) -> serde_json::Value {
+        json!({ "fit": { "r_squared": r2, "iterations": 7.0,
+                         "converged": converged, "within_bounds": within } })
+    }
+
+    // D-108 A3/A3b in the kernel (A3K): the three no-measurement conditions,
+    // in order, and the converse — a bad but finite R² is a measurement.
+    #[test]
+    fn fit_no_measurement_reads_the_three_flags_in_order() {
+        assert_eq!(fit_no_measurement(&diag(json!(0.9), 1.0, 1.0)), None);
+        assert_eq!(fit_no_measurement(&diag(json!(-3.0), 1.0, 1.0)), None);
+        assert_eq!(
+            fit_no_measurement(&diag(json!(0.9), 0.0, 0.0)),
+            Some(NoMeasurement::NotConverged)
+        );
+        assert_eq!(
+            fit_no_measurement(&diag(serde_json::Value::Null, 1.0, 0.0)),
+            Some(NoMeasurement::RSquaredNotFinite)
+        );
+        assert_eq!(
+            fit_no_measurement(&diag(json!(0.9), 1.0, 0.0)),
+            Some(NoMeasurement::OutOfDomain)
+        );
+        assert_eq!(
+            fit_no_measurement(&json!({})),
+            Some(NoMeasurement::NotConverged),
+            "no diagnostics at all is no measurement"
+        );
+    }
+
+    #[test]
+    fn evaluate_fit_is_inconclusive_without_a_measurement_else_evaluate() {
+        let bar = set(vec![Criterion {
+            metric: "fit.r_squared".into(),
+            op: Comparison::Gt,
+            threshold: 0.0,
+            tolerance: None,
+        }]);
+        let measured_bad = diag(json!(-3.0), 1.0, 1.0);
+        assert_eq!(evaluate_fit(&bar, &measured_bad), Outcome::Fail);
+        assert_eq!(
+            evaluate_fit(&bar, &measured_bad),
+            evaluate(&bar, &measured_bad)
+        );
+        assert_eq!(
+            evaluate_fit(&bar, &diag(json!(0.9), 1.0, 1.0)),
+            Outcome::Pass
+        );
+        // The old three-predicate bar would say PARTIAL here; the rule says
+        // there is nothing to judge.
+        assert_eq!(
+            evaluate_fit(&bar, &diag(json!(0.9), 0.0, 1.0)),
+            Outcome::Inconclusive
+        );
+        assert_eq!(
+            evaluate_fit(&set(vec![]), &diag(json!(0.9), 1.0, 0.0)),
+            Outcome::Inconclusive
+        );
     }
 }
